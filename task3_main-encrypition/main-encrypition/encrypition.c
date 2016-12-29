@@ -201,7 +201,11 @@ int set_encrypition_all(struct inverter_info_t *firstinverter, char *key, int op
 	if(count>0)
 	{
 		get_date_time(date_time);
+
+		//sprintf(buff_ema, "%s%05d%s%s%012s1%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, count, "00000000000000",date_time, buff_all);
+
 		sprintf(buff_ema, "%012s%01d%04d%sEND%s", ecuid, operator, count, date_time, buff_all);
+		printf("%s\n",buff_ema);
 		save_process_result(140, buff_ema);
 	}
 
@@ -355,7 +359,10 @@ int read_encrypition_all(struct inverter_info_t *firstinverter, char *key_ecu)		
 	if(count>0)
 	{
 		get_date_time(date_time);
+//		sprintf(buff_ema, "%s%05d%s%s%012s1%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, count, "00000000000000",date_time, buff_all);
+
 		sprintf(buff_ema, "%012s2%04d%sEND%s", ecuid, count, date_time, buff_all);
+		printf("%s\n",buff_ema);
 		save_process_result(140, buff_ema);
 	}
 
@@ -498,7 +505,8 @@ int clear_encrypition_all(struct inverter_info_t *firstinverter)		//清除所有
 	if(count>0)
 	{
 		get_date_time(date_time);
-		sprintf(buff_ema, "%012s1%04d%sEND%s", ecuid, count, date_time, buff_all);
+		sprintf(buff_ema, "%s%05d%s%s%012s1%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, count, "00000000000000",date_time, buff_all);
+		printf("%s\n",buff_ema);
 		save_process_result(140, buff_ema);
 	}
 
