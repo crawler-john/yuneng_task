@@ -4,13 +4,9 @@
 /*                                                                           */
 /*****************************************************************************/
 #include <stdio.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <sys/ioctl.h>
 #include <string.h>
-#include <arpa/inet.h>
-#include <net/if.h>
 #include <pthread.h>
 
 /*****************************************************************************/
