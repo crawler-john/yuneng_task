@@ -1076,149 +1076,144 @@ int main(int argc, char *argv[])
 	durabletime = thistime+65535;		//确保第一次可以轮询；
 
 
-	printf("clear_encrypition_all------>\n");
-	clear_encrypition_all(inverter);
-	printf("set_encrypition_all------>\n");
-	set_encrypition_all(inverter,"123456",1);
-	printf("set_encrypition_all------>\n");
-	read_encrypition_all(inverter,"405000008005");
 
 
-//	while(1){
-//		if((durabletime-thistime)>=reportinterval){
-//			thistime = time(NULL);
-//		printmsg("------------------------------------------------------------------->");
-//
-//		memset(sendcommanddatetime, '\0', 20);	//printf("point1 ");		//清空本次广播的时间
-//
-//		time_linux = get_time(sendcommanddatetime, sendcommandtime);
-//
-//		test_signal_strength(plcmodem, ccuid);		//检测电网信号强度，ZK
-//
-//		curcount = getalldata(inverter, sendcommandtime, time_linux);//printf("point3 ");		//获取所有逆变器数据，返回当前有数据的逆变器的数量
-//
-//		systempower = calsystempower(inverter);	//printf("point4 ");		//计算系统当前一轮的功率
-//
-//		cursysgeneration = calsystemgeneration(inverter);//printf("point5 ");	//计算系统当前一轮的发电量
-//
-//		ltgeneration = ltgeneration + cursysgeneration;//printf("point6 ");		//计算系统历史发电量
-//
-//		set_lifetime_power(db,ltgeneration);//printf("point7\n");			//设置系统历史发电量
-//
-//		todaypower(db, cursysgeneration);			//设置系统当天的发电量
-//
-//		printdecmsg("systempower", systempower);
-//		printfloatmsg("cursysgeneration", cursysgeneration);
-//		printfloatmsg("ltgeneration", ltgeneration);
-//		printdecmsg("curcount", curcount);
-//
-//		disparameters(transflag, systempower, ltgeneration, curcount, maxcount);
-//		protocal(inverter, ecuid, sendbuff, sendcommanddatetime, systempower, cursysgeneration, ltgeneration);//printf("point81\n");		//把数据转换为协议
-//		protocol_status(inverter, sendcommanddatetime);
-//
-//			/*if(curcount>0){//if(strlen(sendbuff)>0){			//如果当前有逆变器上传数据，那么ECU发送记录给EMA
-//				if(1==transflag){		//GPRS发送
-//					if(1 != gprssendrecord(transfd, sendbuff))	//如果发送失败，标记，以便下次重新发送
-//						resendflag = '1';
-//					else
-//						resendflag = '0';
-//				}
-//				/*else{				//以太网发送
-//					if(1==connectflag){				//如果连接标志为1，说明ECU与EMA已连接，可以发送送数据
-//						res = send_record(transfd, sendbuff);
-//						if(-1 == res){
-//							connectflag=-1;
-//							close_socket(transfd);
-//							transfd=createsocket();
-//							connect_process();
-//							resendflag = '1';
-//						}
-//						else if(0 == res)
-//							resendflag = '1';
-//						else
-//							resendflag = '0';
-//					}
-//					else						//说明ECU和EMA没有连接上，直接设置重发标志
-//						resendflag = '1';
-//				}*/
-//			//}
-//
-//		if(curcount>0){
-//			save_record(sendbuff, sendcommanddatetime);//printf("point9 ");			//把发送给EMA的记录保存在数据库中
-//			saveevent(db, inverter, sendcommanddatetime);//printf("point10 ");		//保存当前一轮逆变器的事件
-//
-//			save_system_power(systempower,sendcommanddatetime);
-//			update_daily_energy(cursysgeneration,sendcommanddatetime);
-//			update_monthly_energy(cursysgeneration,sendcommanddatetime);
-//			update_yearly_energy(cursysgeneration,sendcommanddatetime);
-//			update_lifetime_energy(ltgeneration);
-//		}
-//
-//			//}
-//		//}//printf("point11 ");		//printf("test point!\n");
-//		disparameters(transflag, systempower, ltgeneration, curcount, maxcount);//printf("point12 ");		//液晶屏上的参数
-//		show_data_on_lcd(systempower, ltgeneration, curcount, maxcount);
-//		sleep(1);
-//
-//		if(curcount > 0)
-//			displayonweb(inverter, sendcommanddatetime);//printf("point13 ");						//实时数据页面的数据
-//
-//		if(curcount > 0){
-//			process_connect(inverter);
-//			set_protection_parameters(inverter);
-//			read_max_power(inverter);
-//			//process_max_power_all(inverter);
-//			process_grid_environment_all(inverter);
-//			process_ird_all(inverter);
-//			process_restore_inverter(inverter);
-//			get_inverter_version_all(inverter);
-//		}
-//		processpower(inverter);
-//		set_protection_parameters_inverter(inverter);
-//		read_reference_protect_parameters(inverter);
-//		turn_on_off(inverter);
-//		clear_gfdi(inverter);
-//		process_grid_environment(inverter);
-//		process_ird(inverter);
-//		process_protect_parameters(inverter);
-//		process_paras_changed(inverter);
-//		process_encrypition(inverter);
-//		get_all_signal_strength(inverter);
-//		get_inverter_version_single();
-//		update_inverter();
-//		get_unnormal_id(inverter,curcount,maxcount);
-//		back3501uid(inverter);
-//
-//		format(inverter, sendcommanddatetime, systempower, cursysgeneration, ltgeneration);
-//		turnoffautorptid(plcmodem, ccuid, inverter);			//发送禁止逆变器上报ID的命令，ZK
-//
-//		resetinverter(inverter);//printf("point14\n");								//重置每个逆变器
-//		memset(sendbuff, '\0', MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);			//清空发送缓冲sendbuff*/
-//
-//		if(0 == maxcount)					//如果系统中没有逆变器上传数据，等待1s
-//			sleep(1);}
+	while(1){
+		if((durabletime-thistime)>=60){
+			thistime = time(NULL);
+		printmsg("------------------------------------------------------------------->");
+
+		memset(sendcommanddatetime, '\0', 20);	printf("point1 ");		//清空本次广播的时间
+
+		time_linux = get_time(sendcommanddatetime, sendcommandtime);
+
+		test_signal_strength(plcmodem, ccuid);		//检测电网信号强度，ZK
+
+		curcount = getalldata(inverter, sendcommandtime, time_linux);//printf("point3 ");		//获取所有逆变器数据，返回当前有数据的逆变器的数量
+
+		systempower = calsystempower(inverter);	//printf("point4 ");		//计算系统当前一轮的功率
+
+		cursysgeneration = calsystemgeneration(inverter);//printf("point5 ");	//计算系统当前一轮的发电量
+
+		ltgeneration = ltgeneration + cursysgeneration;//printf("point6 ");		//计算系统历史发电量
+
+		set_lifetime_power(db,ltgeneration);//printf("point7\n");			//设置系统历史发电量
+
+		todaypower(db, cursysgeneration);			//设置系统当天的发电量
+
+		printdecmsg("systempower", systempower);
+		printfloatmsg("cursysgeneration", cursysgeneration);
+		printfloatmsg("ltgeneration", ltgeneration);
+		printdecmsg("curcount", curcount);
+
+		disparameters(transflag, systempower, ltgeneration, curcount, maxcount);
+		protocal(inverter, ecuid, sendbuff, sendcommanddatetime, systempower, cursysgeneration, ltgeneration);//printf("point81\n");		//把数据转换为协议
+		protocol_status(inverter, sendcommanddatetime);
+
+			/*if(curcount>0){//if(strlen(sendbuff)>0){			//如果当前有逆变器上传数据，那么ECU发送记录给EMA
+				if(1==transflag){		//GPRS发送
+					if(1 != gprssendrecord(transfd, sendbuff))	//如果发送失败，标记，以便下次重新发送
+						resendflag = '1';
+					else
+						resendflag = '0';
+				}
+				/*else{				//以太网发送
+					if(1==connectflag){				//如果连接标志为1，说明ECU与EMA已连接，可以发送送数据
+						res = send_record(transfd, sendbuff);
+						if(-1 == res){
+							connectflag=-1;
+							close_socket(transfd);
+							transfd=createsocket();
+							connect_process();
+							resendflag = '1';
+						}
+						else if(0 == res)
+							resendflag = '1';
+						else
+							resendflag = '0';
+					}
+					else						//说明ECU和EMA没有连接上，直接设置重发标志
+						resendflag = '1';
+				}*/
+			//}
+
+		if(curcount>0){
+			save_record(sendbuff, sendcommanddatetime);//printf("point9 ");			//把发送给EMA的记录保存在数据库中
+			saveevent(db, inverter, sendcommanddatetime);//printf("point10 ");		//保存当前一轮逆变器的事件
+
+			save_system_power(systempower,sendcommanddatetime);
+			update_daily_energy(cursysgeneration,sendcommanddatetime);
+			update_monthly_energy(cursysgeneration,sendcommanddatetime);
+			update_yearly_energy(cursysgeneration,sendcommanddatetime);
+			update_lifetime_energy(ltgeneration);
+		}
+
+			//}
+		//}//printf("point11 ");		//printf("test point!\n");
+		disparameters(transflag, systempower, ltgeneration, curcount, maxcount);//printf("point12 ");		//液晶屏上的参数
+		show_data_on_lcd(systempower, ltgeneration, curcount, maxcount);
+		sleep(1);
+
+		if(curcount > 0)
+			displayonweb(inverter, sendcommanddatetime);//printf("point13 ");						//实时数据页面的数据
+
+		if(curcount > 0){
+			process_connect(inverter);
+			set_protection_parameters(inverter);
+			read_max_power(inverter);
+			//process_max_power_all(inverter);
+			process_grid_environment_all(inverter);
+			process_ird_all(inverter);
+			process_restore_inverter(inverter);
+			get_inverter_version_all(inverter);
+		}
+		processpower(inverter);
+		set_protection_parameters_inverter(inverter);
+		read_reference_protect_parameters(inverter);
+		turn_on_off(inverter);
+		clear_gfdi(inverter);
+		process_grid_environment(inverter);
+		process_ird(inverter);
+		process_protect_parameters(inverter);
+		process_paras_changed(inverter);
+		process_encrypition(inverter);
+		get_all_signal_strength(inverter);
+		get_inverter_version_single();
+		update_inverter();
+		get_unnormal_id(inverter,curcount,maxcount);
+		back3501uid(inverter);
+
+		format(inverter, sendcommanddatetime, systempower, cursysgeneration, ltgeneration);
+		turnoffautorptid(plcmodem, ccuid, inverter);			//发送禁止逆变器上报ID的命令，ZK
+
+		resetinverter(inverter);//printf("point14\n");								//重置每个逆变器
+		memset(sendbuff, '\0', MAXINVERTERCOUNT*RECORDLENGTH+RECORDTAIL);			//清空发送缓冲sendbuff*/
+
+		if(0 == maxcount)					//如果系统中没有逆变器上传数据，等待1s
+			sleep(1);}
+		else
+			sleep(1);
+
+		if(curcount > 0)
+			process_all(inverter);
+
+		durabletime = time(NULL);				//如果轮询一遍的时间不到5分钟，那么一直等到5分钟再轮询下一遍，超过5分钟则等到10分钟。。。5分钟起跳
+//		if((durabletime-thistime)<=300)
+//			reportinterval = 300;
+//		else if((durabletime-thistime)<=600)
+//			reportinterval = 600;
+//		else if((durabletime-thistime)<=900)
+//			reportinterval = 900;
 //		else
-//			sleep(1);
-//
-//		if(curcount > 0)
-//			process_all(inverter);
-//
-//		durabletime = time(NULL);				//如果轮询一遍的时间不到5分钟，那么一直等到5分钟再轮询下一遍，超过5分钟则等到10分钟。。。5分钟起跳
-////		if((durabletime-thistime)<=300)
-////			reportinterval = 300;
-////		else if((durabletime-thistime)<=600)
-////			reportinterval = 600;
-////		else if((durabletime-thistime)<=900)
-////			reportinterval = 900;
-////		else
-////			reportinterval = 1200;
-//		if(0 != (durabletime-thistime)%300)
-//			reportinterval = ((durabletime-thistime)/300 + 1)*300;
-//		else
-//			reportinterval = durabletime-thistime;
-//
+//			reportinterval = 1200;
+		if(0 != (durabletime-thistime)%300)
+			reportinterval = ((durabletime-thistime)/300 + 1)*300;
+		else
+			reportinterval = durabletime-thistime;
+
 //		durabletime = fill_up_data(inverter,(reportinterval+300+thistime),thistime);
-//	}
+
+	}
 
 	return 0;
 }

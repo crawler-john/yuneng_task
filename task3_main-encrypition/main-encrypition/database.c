@@ -127,7 +127,7 @@ int encrypition_init()
 	char sql[1024]={'\0'};
 	sqlite3 *db;
 
-	sqlite3_open("/home/encrypition.db", &db);
+	sqlite3_open("/home/encryption.db", &db);
 
 	strcpy(sql, "CREATE TABLE IF NOT EXISTS key (item INTEGER PRIMARY KEY, key VARCHAR(256), operator INTEGER, "
 			"cmd INTEGER, read_flag INTEGER)");
@@ -194,7 +194,6 @@ int save_inverter_parameters_result(struct inverter_info_t *inverter, int item, 
 
 int save_inverter_parameters_result_id(char *id, int item, char *inverter_result)
 {
-	printf("2------------->save_inverter_parameters_result_id\n");
 	sqlite3 *db=NULL;
 	char sql[65535];
 
@@ -884,7 +883,6 @@ int get_protect_parameters(int *max_vol, int *min_vol, int *max_fre, int *min_fr
 
 int save_process_result(int item, char *result)	//设置保护参数，功率等完成后，把结果保存到数据库中，control_client把结果发送到EMA
 {
-	printf("1----------------->save_process_result\n");
 	sqlite3 *db;
 	char *zErrMsg=0;
 	char sql[65535];

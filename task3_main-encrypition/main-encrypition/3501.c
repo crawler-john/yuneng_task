@@ -1954,6 +1954,7 @@ int afd_broadcast(void)
 /*********************单个开机************************/
 int wakeup(struct inverter_info_t *inverter)
 {
+	printf("1---------->wakeup\n");
 	unsigned char sendbuff[512]={'\0'};
 	unsigned char readbuff[512]={'\0'};
 	unsigned short check=0x00;
@@ -2068,6 +2069,7 @@ int wakeup_broadcast(void)
 /*********************单个关机************************/
 int shutdown(struct inverter_info_t *inverter)
 {
+	printf("2---------->shutdown\n");
 	unsigned char sendbuff[512]={'\0'};
 	unsigned char readbuff[512]={'\0'};
 	unsigned short check=0x00;

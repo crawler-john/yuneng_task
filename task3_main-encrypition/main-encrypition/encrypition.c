@@ -19,7 +19,7 @@ int save_encrypition_result(char *id, char *key, int status, int result)					//�
 	sqlite3 *db=NULL;
 
 	memset(sql, '\0', sizeof(sql));
-	if(SQLITE_OK != sqlite3_open("/home/encrypition.db", &db))
+	if(SQLITE_OK != sqlite3_open("/home/encryption.db", &db))
 		return -1;
 
 	sprintf(sql, "UPDATE info SET key='%s',status=%d,result=%d WHERE id='%s' ", key, status, result, id);
@@ -37,7 +37,7 @@ int clear_set_flag()		//清除数据库中的设置标志
 	sqlite3 *db=NULL;
 
 	memset(sql, '\0', sizeof(sql));
-	if(SQLITE_OK != sqlite3_open("/home/encrypition.db", &db))
+	if(SQLITE_OK != sqlite3_open("/home/encryption.db", &db))
 		return -1;
 
 	sprintf(sql, "UPDATE key SET set_flag=0 WHERE item=1");
@@ -55,7 +55,7 @@ int clear_read_flag()		//清除数据库中的读取标志
 	sqlite3 *db=NULL;
 
 	memset(sql, '\0', sizeof(sql));
-	if(SQLITE_OK != sqlite3_open("/home/encrypition.db", &db))
+	if(SQLITE_OK != sqlite3_open("/home/encryption.db", &db))
 		return -1;
 
 	sprintf(sql, "UPDATE key SET read_flag=0 WHERE item=1");
@@ -202,10 +202,10 @@ int set_encrypition_all(struct inverter_info_t *firstinverter, char *key, int op
 	{
 		get_date_time(date_time);
 
-		//sprintf(buff_ema, "%s%05d%s%s%012s1%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, count, "00000000000000",date_time, buff_all);
+		sprintf(buff_ema, "%s%05d%s%s%012s%01d%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, operator, count, "00000000000000",date_time, buff_all);
 
-		sprintf(buff_ema, "%012s%01d%04d%sEND%s", ecuid, operator, count, date_time, buff_all);
-		printf("%s\n",buff_ema);
+//		sprintf(buff_ema, "%012s%01d%04d%sEND%s", ecuid, operator, count, date_time, buff_all);
+//		printf("%s\n",buff_ema);
 		save_process_result(140, buff_ema);
 	}
 
@@ -359,10 +359,10 @@ int read_encrypition_all(struct inverter_info_t *firstinverter, char *key_ecu)		
 	if(count>0)
 	{
 		get_date_time(date_time);
-//		sprintf(buff_ema, "%s%05d%s%s%012s1%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, count, "00000000000000",date_time, buff_all);
+		sprintf(buff_ema, "%s%05d%s%s%012s2%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, count, "00000000000000",date_time, buff_all);
 
-		sprintf(buff_ema, "%012s2%04d%sEND%s", ecuid, count, date_time, buff_all);
-		printf("%s\n",buff_ema);
+//		sprintf(buff_ema, "%012s2%04d%sEND%s", ecuid, count, date_time, buff_all);
+//		printf("%s\n",buff_ema);
 		save_process_result(140, buff_ema);
 	}
 
@@ -506,7 +506,7 @@ int clear_encrypition_all(struct inverter_info_t *firstinverter)		//清除所有
 	{
 		get_date_time(date_time);
 		sprintf(buff_ema, "%s%05d%s%s%012s1%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, count, "00000000000000",date_time, buff_all);
-		printf("%s\n",buff_ema);
+//		printf("%s\n",buff_ema);
 		save_process_result(140, buff_ema);
 	}
 
@@ -591,7 +591,7 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 	FILE *fp;
 	char flag[2]={'\0'};
 
-	fp = fopen("/etc/yuneng/encrypition.conf", "r");	//读取配置文件
+	fp = fopen("/etc/yuneng/encryption.conf", "r");	//读取配置文件
 	if(fp)
 	{
 		fgets(flag, sizeof(flag), fp);
@@ -603,7 +603,7 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 	else	//文件不存在，说明没有加密功能，直接返回。
 		return 0;
 
-	if(SQLITE_OK != sqlite3_open("/home/encrypition.db", &db))		//create a database
+	if(SQLITE_OK != sqlite3_open("/home/encryption.db", &db))		//create a database
 		return -1;
 
 	strcpy(sql, "SELECT key,operator,cmd,set_flag,read_flag FROM key WHERE item=1");	//读取最后一次操作的信息。
@@ -630,6 +630,7 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 
 	if(1 == set_flag)		//需要设置加密或清除加密
 	{
+		printf("%s---->%d\n",__func__,__LINE__);
 		if(1 == cmd)		//设置加密
 		{
 			set_encrypition_all(firstinverter, key, operator);
