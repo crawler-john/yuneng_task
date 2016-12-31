@@ -22,7 +22,7 @@ int save_encrypition_result(char *id, char *key, int status, int result)					//æ
 	if(SQLITE_OK != sqlite3_open("/home/encryption.db", &db))
 		return -1;
 
-	sprintf(sql, "UPDATE info SET key='%s',status=%d,result=%d WHERE id='%s' ", key, status, result, id);
+	sprintf(sql, "REPLACE into info(id,key, status, result) values('%s' ,'%s',%d,%d) ", id, key, status, result);
 	sqlite3_exec_3times(db, sql);
 
 	sqlite3_close( db );
