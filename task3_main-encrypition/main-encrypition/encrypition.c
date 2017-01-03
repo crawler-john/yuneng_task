@@ -205,7 +205,7 @@ int set_encrypition_all(struct inverter_info_t *firstinverter, char *key, int op
 		sprintf(buff_ema, "%s%05d%s%s%012s%01d%04d%s%sEND%s", "APS13",(66+17*count),"A140","AAA0",ecuid, operator, count, "00000000000000",date_time, buff_all);
 
 //		sprintf(buff_ema, "%012s%01d%04d%sEND%s", ecuid, operator, count, date_time, buff_all);
-//		printf("%s\n",buff_ema);
+//		printf("!!!!!!!!!!!!!\nsss%s\n",buff_ema);
 		save_process_result(140, buff_ema);
 	}
 
@@ -630,7 +630,6 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 
 	if(1 == set_flag)		//需要设置加密或清除加密
 	{
-		printf("%s---->%d\n",__func__,__LINE__);
 		if(1 == cmd)		//设置加密
 		{
 			set_encrypition_all(firstinverter, key, operator);
