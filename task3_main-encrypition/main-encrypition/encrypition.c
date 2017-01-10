@@ -30,6 +30,24 @@ int save_encrypition_result(char *id, char *key, int status, int result)					//�
 	return 0;
 }
 
+int save_encrypition_key(char *id, char *key)					//读取密钥
+{
+	char sql[1024]={'\0'};
+	char *zErrMsg=0;
+	sqlite3 *db=NULL;
+
+	memset(sql, '\0', sizeof(sql));
+	if(SQLITE_OK != sqlite3_open("/home/encryption.db", &db))
+		return -1;
+
+	sprintf(sql, "REPLACE into info(id,key) values('%s' ,'%s') ", id, key);
+	sqlite3_exec_3times(db, sql);
+
+	sqlite3_close( db );
+
+	return 0;
+}
+
 int clear_set_flag()		//清除数据库中的设置标志
 {
 	char sql[1024]={'\0'};
@@ -265,7 +283,7 @@ int read_encrypition_key(char *id, char *key_ecu, char *buff_inv)		//读取逆�
 	sendbuff[34] = 0xFE;		//TAIL
 	sendbuff[35] = 0xFE;		//TAIL
 
-	printhexmsg("Set Encrypition Key", sendbuff, 36);
+	printhexmsg("Read Encrypition Key", sendbuff, 36);
 
 	for(i=0; i<3; i++){
 		write(plcmodem, sendbuff, 36);
@@ -299,10 +317,10 @@ int read_encrypition_key(char *id, char *key_ecu, char *buff_inv)		//读取逆�
 				(readbuff[34] == 0xFE) &&
 				(readbuff[35] == 0xFE)
 			){
-			print2msg(id, "Set Encrypition Key successfully");
+			print2msg(id, "Read Encrypition Key successfully");
 			for(i=0; i<8; i++)
 				key[i] = readbuff[24+i];
-			save_encrypition_result(id, key, 2, 1);
+			save_encrypition_key(id, key);
 			sprintf(buff_inv, "%012s0%01dEND", id, readbuff[22]);
 
 			if(!strlen(key_ecu))
@@ -331,7 +349,7 @@ int read_encrypition_key(char *id, char *key_ecu, char *buff_inv)		//读取逆�
 		}
 		else
 		{
-			print2msg(id, "Failed to Set Encrypition Key");
+			print2msg(id, "Failed to Read Encrypition Key");
 		}
 	}
 	sprintf(buff_inv, "%012s02END", id, readbuff[22]);
@@ -421,7 +439,7 @@ int clear_encrypition_key(char *id, char *buff_inv)		//给逆变器清空密钥
 	sendbuff[34] = 0xFE;		//TAIL
 	sendbuff[35] = 0xFE;		//TAIL
 
-	printhexmsg("Set Encrypition Key", sendbuff, 36);
+	printhexmsg("Clear Encrypition Key", sendbuff, 36);
 
 	for(i=0; i<3; i++){
 		write(plcmodem, sendbuff, 36);
@@ -459,7 +477,7 @@ int clear_encrypition_key(char *id, char *buff_inv)		//给逆变器清空密钥
 			print2msg(id, "Clear Encrypition Key successfully");
 			if(0x00 == readbuff[22])
 			{
-				save_encrypition_result(id, "", 1, 1);
+				save_encrypition_result(id, "", 2, 1);
 				sprintf(buff_inv, "%012s10END", id);
 			}
 			else
