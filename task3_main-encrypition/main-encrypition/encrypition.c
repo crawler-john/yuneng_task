@@ -446,7 +446,6 @@ int clear_encrypition_key(char *id, char *buff_inv)		//给逆变器清空密钥
 		usleep(500000);
 
 		ret = get_reply_from_serial(plcmodem, 5, 0, readbuff);
-
 		if((36 == ret) &&
 				(readbuff[0] == 0xFB) &&
 				(readbuff[1] == 0xFB) &&
@@ -470,7 +469,7 @@ int clear_encrypition_key(char *id, char *buff_inv)		//给逆变器清空密钥
 				(readbuff[19] == 0x00) &&
 				(readbuff[20] == 0xD0) &&
 				(readbuff[21] == 0xA1) &&
-				(readbuff[23] == 0x00) &&
+				(readbuff[23] == 0x55) &&
 				(readbuff[34] == 0xFE) &&
 				(readbuff[35] == 0xFE)
 			){
@@ -670,7 +669,7 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 				if(!strcmp(inverter->inverterid, azResult[j*ncolumn]))
 				{
 					exist = 1;
-					if((atoi(azResult[j*ncolumn+1])) && (cmd != atoi(azResult[j*ncolumn+1])))		//逆变器的信息已存在，如果逆变器的加密信息和最后一次操作不一致，需要重新操作。
+					if((azResult[j*ncolumn+1]) && (cmd != atoi(azResult[j*ncolumn+1])))		//逆变器的信息已存在，如果逆变器的加密信息和最后一次操作不一致，需要重新操作。
 					{
 						if(1 == cmd)
 							set_encrypition_key(inverter->inverterid, key, buff_inv);
