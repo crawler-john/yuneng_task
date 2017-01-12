@@ -160,7 +160,7 @@ void Thread_HorseRaceLED()	//按键按下启动的线程
 /*   the result value                                                        */
 /*                                                                           */
 /*****************************************************************************/
-void setBigButton()
+void setBigButton()  //设置配置文件，如果配置文件是1，则改变为0.如果配置文件是0，则改变为1.
 {
         char flag;
         FILE *fp = fopen("/etc/yuneng/bigbutton.conf","r");
@@ -188,7 +188,7 @@ void setBigButton()
 
 
 
-int readBigButton()
+int readBigButton()	//读取配置文件信息，如果没有配置文件则创建一个为0的配置文件，否则读取配置文件的内容
 {
         char flag;
         FILE *fp = fopen("/etc/yuneng/bigbutton.conf","r");
@@ -223,10 +223,10 @@ int readBigButton()
 /*****************************************************************************/
 /* Return Values:                                                            */
 /*****************************************************************************/
-/*   1    -  Pressed Button                                                  */
-/*   0    -  Not Pressed Button                                              */
+/*   0    -  Pressed Button                                                  */
+/*   1    -  Not Pressed Button                                              */
 /*****************************************************************************/
-int get_button_status()
+int get_button_status()	//获取按键的状态
 {
 	int fd, ret;
 	char buff[2]={'1'};
@@ -244,10 +244,10 @@ int get_button_status()
 int main()
 {
 	int ret = 0;
-	int flag = 0,prevflag = 0;	//按钮前后对比标志
+	int flag = 1,prevflag = 1;	//按钮前后对比标志,初始状态为按键未按下，为1
 	int buttonStatus = 0,prevbuttonStatus = 0;	//文件中，按钮对应状态标志
 	pthread_t thread_LED = 0;	//按键按下线程ID
-	LED_Init();
+	LED_Init();		//初始化并设置LED灯都不亮
 	LED_Control(LED_OK,"1");
 	LED_Control(LED_COMM,"1");
 	LED_Control(LED_FAULT,"1");
@@ -281,6 +281,7 @@ int main()
 			printf("flag:%d\n",flag);
 			setBigButton(); 
 		}
+		usleep(1000);
 	}
 	LED_DeInit();
 }
