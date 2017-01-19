@@ -912,7 +912,7 @@ int main(int argc, char *argv[])
 //		thistime = lasttime = time(NULL);
 		for(i=0; i<DAYS; i++)
 			memset(date[i], '\0', sizeof(date[i]));
-		nrecord = 0;
+		nrecord = 1;
 		nrow = 0;
 		ncolumn = 0;
 
@@ -972,7 +972,7 @@ int main(int argc, char *argv[])
 							memset(data, '\0', sizeof(data));
 							strcpy(data, azResult[i*ncolumn]);
 							strcpy(date_time, azResult[i*ncolumn+1]);
-							if(nrecord != (nrow-1))
+							if(nrecord != nrow)
 								data[88] = '1';
 							//printmsg(azResult[i*ncolumn]);
 							res = send_record(fd_sock, data, date_time);
