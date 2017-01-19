@@ -522,7 +522,7 @@ int fill_up_data()		//PLC补发的数据（单路）超过逆变器总数的12�
 	char sql[65535]={'\0'};
 	char *zErrMsg=0;
 	char **azResult;
-	int nrow=0, ncolumn, number, i, j, count=0, res;
+	int nrow=0, ncolumn, number, i, j, count=0,sendMaxCount=0, res;
 	char sendbuff[65535]={'\0'};
 	char temp[256]={'\0'};
 //	struct timeval send_time;
@@ -542,7 +542,7 @@ int fill_up_data()		//PLC补发的数据（单路）超过逆变器总数的12�
 	number = get_inverter_number();
 	printf("number: %d, count: %d\n", number, count);
 
-	if((number >0) && (count>number*2*6)){
+	if((number >0)){
 		fp = fopen("/etc/yuneng/ecuid.conf", "r");
 		if(fp)
 		{
@@ -552,18 +552,27 @@ int fill_up_data()		//PLC补发的数据（单路）超过逆变器总数的12�
 		print2msg("ECU ID", ecu_id);
 
 		fd_sock = createsocket();
+
+		memset(sql, '\0', sizeof(sql));
+		if (number > 100) {
+			sendMaxCount = number * 0.2;
+			if (sendMaxCount > 100)	//补发200条上限
+				sendMaxCount = 100;
+		} else
+			sendMaxCount = 20;
+
 		if(1 == connect_socket(fd_sock)){
 			while(1){
 				sprintf(sql, "SELECT item,data,lost_date_time FROM fill_up_data WHERE send_flag=1 AND "
 						"lost_date_time>'20100101' AND "
 						"lost_date_time IN (SELECT DISTINCT date_time FROM Data WHERE resendflag='0' AND date_time>'20100101') "
-						"ORDER BY lost_date_time DESC LIMIT 0,%d", number);
+						"ORDER BY lost_date_time DESC LIMIT 0,%d", sendMaxCount);
 				if(SQLITE_OK == sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg )){
 					if(nrow > 0){
 						time(&tm);
 						memcpy(&record_time, localtime(&tm), sizeof(record_time));
 
-						sprintf(send_date_time, "%04d%02d%02d%02d%02d%02d", record_time.tm_year+2900, record_time.tm_mon+1, record_time.tm_mday, record_time.tm_hour, record_time.tm_min, record_time.tm_sec);
+						sprintf(send_date_time, "%04d%02d%02d%02d%02d%02d", record_time.tm_year+1900, record_time.tm_mon+1, record_time.tm_mday, record_time.tm_hour, record_time.tm_min, record_time.tm_sec);
 						print2msg("ECU ID", ecu_id);
 						sprintf(sendbuff, "APS160000000010001%12s%14s%14sENDADD", ecu_id, send_date_time,azResult[5]);
 						for(i=1; i<=nrow;){
@@ -680,7 +689,7 @@ int change_head()	//实时数据的时间点不存在，EMA无法保存该时间
 	char *zErrMsg=0;
 	char **azResult;
 	int i, nrow, ncolumn;
-	int power=0, energy=0, count=0;
+	int power=0, energy=0, count=0; //暂用energy为优化器的输入功率
 	int zoneflag = 0;
 	sqlite3 *db;
 	FILE *fp;
@@ -715,15 +724,17 @@ int change_head()	//实时数据的时间点不存在，EMA无法保存该时间
 		{
 			strcat(body, azResult[i*ncolumn]);
 			strcat(body, "END");
-			strncpy(temp, &azResult[i*ncolumn][21], 5);
+			strncpy(temp, &azResult[i*ncolumn][24], 6);
 			power += atoi(temp);
-			strncpy(temp, &azResult[i*ncolumn][37], 10);
+			strncpy(temp, &azResult[i*ncolumn][56], 6);
+			energy += atoi(temp);
+			strncpy(temp, &azResult[i*ncolumn][85], 6);
 			energy += atoi(temp);
 			count++;
 			if((i==nrow) || (strcmp(azResult[i*ncolumn+1], azResult[(i+1)*ncolumn+1])))		//时间不同，保存数据，初始化变量
 			{
-				sprintf(buff, "APS15%05d00010001%s%010d%010d0000000000%s%03d%1d00000END", 86+50*count, ecu_id, power, energy,
-							azResult[i*ncolumn+1], count/2, zoneflag);
+				sprintf(buff, "APS16%05d00010001%s%010d%010d00000000000000000000%s%03d%1d00000END", 96+101*count, ecu_id, power, energy,
+							azResult[i*ncolumn+1], count, zoneflag);
 				strcat(buff, body);
 				strcat(buff, "\n");
 				save_record(buff, azResult[i*ncolumn+1]);
@@ -961,7 +972,7 @@ int main(int argc, char *argv[])
 							memset(data, '\0', sizeof(data));
 							strcpy(data, azResult[i*ncolumn]);
 							strcpy(date_time, azResult[i*ncolumn+1]);
-							if(nrecord != nrow)
+							if(nrecord != (nrow-1))
 								data[88] = '1';
 							//printmsg(azResult[i*ncolumn]);
 							res = send_record(fd_sock, data, date_time);
