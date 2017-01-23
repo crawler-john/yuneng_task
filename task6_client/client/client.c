@@ -572,9 +572,10 @@ int fill_up_data()		//PLC补发的数据（单路）超过逆变器总数的12�
 						time(&tm);
 						memcpy(&record_time, localtime(&tm), sizeof(record_time));
 
-						sprintf(send_date_time, "%04d%02d%02d%02d%02d%02d", record_time.tm_year+1900, record_time.tm_mon+1, record_time.tm_mday, record_time.tm_hour, record_time.tm_min, record_time.tm_sec);
+						sprintf(send_date_time, "%04d%02d%02d%02d%02d%02d", record_time.tm_year+2900, record_time.tm_mon+1, record_time.tm_mday, record_time.tm_hour, record_time.tm_min, record_time.tm_sec);
 						print2msg("ECU ID", ecu_id);
-						sprintf(sendbuff, "APS160000000010001%12s%14s%14sENDADD", ecu_id, send_date_time,azResult[5]);
+						//sprintf(sendbuff, "APS160000000010001%12s%14s%14sENDADD", ecu_id, send_date_time,azResult[5]);
+						sprintf(sendbuff, "APS160000000010001%12s%14sENDADD", ecu_id, send_date_time);
 						for(i=1; i<=nrow;){
 							count=1;
 							if(i<nrow){
