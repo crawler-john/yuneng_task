@@ -351,21 +351,19 @@ int add_lost_data(char *sendbuff, char *send_date_time)		//在正常读取到的
 	char **azResult;
 	int nrow=0, ncolumn, i, j, ret;
 	char length[16]={'\0'};
-	int powerin=0, powerout=0, energyin=0, energyout=0, total_powerin, total_powerout, total_energyin, total_energyout;
+	int power=0, energy=0, total_power, total_energy;
 	char temp[256]={'\0'};
 	int number, count;	//逆变器有number个，同一个时间点的帧数
 	char date_time[16];
 	int number_tmp=0;	//正常记录中逆变器的个数，需要加上同一个时间点的逆变器个数
 	//char result[65535]={'\0'};
 
-	if(strncmp(sendbuff, "APS16", 5) >= 0){
+	if(strncmp(sendbuff, "APS15", 5) >= 0){
 		memset(sql,'\0',sizeof(sql));
 		sprintf(sql,"SELECT item,data FROM fill_up_data WHERE send_flag=1 AND lost_date_time='%s'", send_date_time);
 		if(SQLITE_OK == sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg )){
-			powerin=0;
-			powerout=0;
-			energyin=0;
-			energyout=0;
+			power=0;
+			energy=0;
 			if(nrow > 0){
 				sendbuff[strlen(sendbuff)-1] = '\0';
 				for(i=1; i<=nrow; i++){
@@ -373,82 +371,43 @@ int add_lost_data(char *sendbuff, char *send_date_time)		//在正常读取到的
 					strcat(sendbuff, "END");
 					sprintf(sql, "UPDATE fill_up_data SET send_date_time='%s' WHERE item='%s'", send_date_time, azResult[i*ncolumn]);
 					sqlite3_exec_3times(db, sql);
-
 					memset(temp, '\0', sizeof(temp));
-					strncpy(temp, azResult[i*ncolumn + 1]+24, 6);
+					strncpy(temp, azResult[i*ncolumn + 1]+21, 5);
 					printdecmsg("atoi(temp)", atoi(temp));
-					powerout += atoi(temp);
-
+					power += atoi(temp);
 					memset(temp, '\0', sizeof(temp));
-					strncpy(temp, azResult[i*ncolumn + 1]+56, 6);
+					strncpy(temp, azResult[i*ncolumn + 1]+37, 10);
 					printdecmsg("atoi(temp)", atoi(temp));
-					powerin += atoi(temp);
-					memset(temp, '\0', sizeof(temp));
-					strncpy(temp, azResult[i*ncolumn + 1]+85, 6);
-					printdecmsg("atoi(temp)", atoi(temp));
-					powerin += atoi(temp);
-
-					memset(temp, '\0', sizeof(temp));
-					strncpy(temp, azResult[i*ncolumn + 1]+30, 10);
-					printdecmsg("atoi(temp)", atoi(temp));
-					energyout += atoi(temp);
-
-					memset(temp, '\0', sizeof(temp));
-					strncpy(temp, azResult[i*ncolumn + 1]+62, 10);
-					printdecmsg("atoi(temp)", atoi(temp));
-					energyin += atoi(temp);
-					memset(temp, '\0', sizeof(temp));
-					strncpy(temp, azResult[i*ncolumn + 1]+91, 10);
-					printdecmsg("atoi(temp)", atoi(temp));
-					energyin += atoi(temp);
-
+					energy += atoi(temp);
 				}
 				memset(temp, '\0', sizeof(temp));
 				strncpy(temp, sendbuff+30, 10);
-				total_powerin = atoi(temp) + powerin;
+				total_power = atoi(temp) + power;
 				memset(temp, '\0', sizeof(temp));
-				sprintf(temp, "%010d", total_powerin);
+				sprintf(temp, "%010d", total_power);
 				for(i=30; i<40; i++)
 					sendbuff[i] = temp[i-30];
-
 				memset(temp, '\0', sizeof(temp));
 				strncpy(temp, sendbuff+40, 10);
-				total_powerout = atoi(temp) + powerout;
+				total_energy = atoi(temp) + energy;
 				memset(temp, '\0', sizeof(temp));
-				sprintf(temp, "%010d", total_powerout);
+				sprintf(temp, "%010d", total_energy);
 				for(i=40; i<50; i++)
 					sendbuff[i] = temp[i-40];
-
-				memset(temp, '\0', sizeof(temp));
-				strncpy(temp, sendbuff+50, 10);
-				total_energyin = atoi(temp) + energyin;
-				memset(temp, '\0', sizeof(temp));
-				sprintf(temp, "%010d", total_energyin);
-				for(i=50; i<60; i++)
-					sendbuff[i] = temp[i-50];
-
-				memset(temp, '\0', sizeof(temp));
-				strncpy(temp, sendbuff+60, 10);
-				total_energyout = atoi(temp) + energyout;
-				memset(temp, '\0', sizeof(temp));
-				sprintf(temp, "%010d", total_energyout);
-				for(i=60; i<70; i++)
-					sendbuff[i] = temp[i-60];
-
 				sprintf(length, "%05d", strlen(sendbuff));
 				for(i=5; i<10; i++)
 					sendbuff[i] = length[i-5];
 
-				if('A' != sendbuff[84])
-					number_tmp += (sendbuff[84] - 0x30) * 100;
-				if('A' != sendbuff[85])
-					number_tmp += (sendbuff[85] - 0x30) * 10;
-				if('A' != sendbuff[86])
-					number_tmp += (sendbuff[86] - 0x30);
+				if('A' != sendbuff[74])
+					number_tmp += (sendbuff[74] - 0x30) * 100;
+				if('A' != sendbuff[75])
+					number_tmp += (sendbuff[75] - 0x30) * 10;
+				if('A' != sendbuff[76])
+					number_tmp += (sendbuff[76] - 0x30);
 				memset(temp, '\0', sizeof(temp));
 				sprintf(temp, "%03d", (number_tmp+nrow));
-				for(i=84; i<87; i++)
-					sendbuff[i] = temp[i-84];
+				for(i=74; i<77; i++)
+					sendbuff[i] = temp[i-74];
 
 				strcat(sendbuff, "\n");
 			}
@@ -463,7 +422,7 @@ printf("number: %d\n", number);
 		if(number >0){
 			memset(sql,'\0',sizeof(sql));
 			if(number > 50){
-				count = number*0.2;
+				count = number*0.4;
 				if(count > 200)	//补发200条上限
 					count = 200;
 			}
@@ -552,7 +511,6 @@ int fill_up_data()		//PLC补发的数据（单路）超过逆变器总数的12�
 		print2msg("ECU ID", ecu_id);
 
 		fd_sock = createsocket();
-
 		memset(sql, '\0', sizeof(sql));
 		if (number > 100) {
 			sendMaxCount = number * 0.2;
@@ -574,8 +532,7 @@ int fill_up_data()		//PLC补发的数据（单路）超过逆变器总数的12�
 
 						sprintf(send_date_time, "%04d%02d%02d%02d%02d%02d", record_time.tm_year+2900, record_time.tm_mon+1, record_time.tm_mday, record_time.tm_hour, record_time.tm_min, record_time.tm_sec);
 						print2msg("ECU ID", ecu_id);
-						//sprintf(sendbuff, "APS160000000010001%12s%14s%14sENDADD", ecu_id, send_date_time,azResult[5]);
-						sprintf(sendbuff, "APS160000000010001%12s%14sENDADD", ecu_id, send_date_time);
+						sprintf(sendbuff, "APS150000000020001%12s%14sENDADD", ecu_id, send_date_time);
 						for(i=1; i<=nrow;){
 							count=1;
 							if(i<nrow){
@@ -690,7 +647,7 @@ int change_head()	//实时数据的时间点不存在，EMA无法保存该时间
 	char *zErrMsg=0;
 	char **azResult;
 	int i, nrow, ncolumn;
-	int power=0, energy=0, count=0; //暂用energy为优化器的输入功率
+	int power=0, energy=0, count=0;
 	int zoneflag = 0;
 	sqlite3 *db;
 	FILE *fp;
@@ -725,17 +682,15 @@ int change_head()	//实时数据的时间点不存在，EMA无法保存该时间
 		{
 			strcat(body, azResult[i*ncolumn]);
 			strcat(body, "END");
-			strncpy(temp, &azResult[i*ncolumn][24], 6);
+			strncpy(temp, &azResult[i*ncolumn][21], 5);
 			power += atoi(temp);
-			strncpy(temp, &azResult[i*ncolumn][56], 6);
-			energy += atoi(temp);
-			strncpy(temp, &azResult[i*ncolumn][85], 6);
+			strncpy(temp, &azResult[i*ncolumn][37], 10);
 			energy += atoi(temp);
 			count++;
 			if((i==nrow) || (strcmp(azResult[i*ncolumn+1], azResult[(i+1)*ncolumn+1])))		//时间不同，保存数据，初始化变量
 			{
-				sprintf(buff, "APS16%05d00010001%s%010d%010d00000000000000000000%s%03d%1d00000END", 96+101*count, ecu_id, power, energy,
-							azResult[i*ncolumn+1], count, zoneflag);
+				sprintf(buff, "APS15%05d00010001%s%010d%010d0000000000%s%03d%1d00000END", 86+50*count, ecu_id, power, energy,
+							azResult[i*ncolumn+1], count/2, zoneflag);
 				strcat(buff, body);
 				strcat(buff, "\n");
 				save_record(buff, azResult[i*ncolumn+1]);
@@ -974,7 +929,7 @@ int main(int argc, char *argv[])
 							strcpy(data, azResult[i*ncolumn]);
 							strcpy(date_time, azResult[i*ncolumn+1]);
 							if(nrecord != nrow)
-								data[88] = '1';
+								data[78] = '1';
 							//printmsg(azResult[i*ncolumn]);
 							res = send_record(fd_sock, data, date_time);
 							nrecord++;

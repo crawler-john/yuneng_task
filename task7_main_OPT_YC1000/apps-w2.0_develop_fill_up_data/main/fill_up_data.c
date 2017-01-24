@@ -66,7 +66,7 @@ int init_lost_data_info()
 		turn_on_flag = 0;
 		return 0;
 	}
-
+	printf("init_lost_data_info: %d--->%d\n",__LINE__,turn_on_flag);
 	lost_data_info.current_inverter=0;
 	lost_data_info.inverter_count=0;
 	memset(lost_data_info.sendbuff, '\0', sizeof(lost_data_info.sendbuff));

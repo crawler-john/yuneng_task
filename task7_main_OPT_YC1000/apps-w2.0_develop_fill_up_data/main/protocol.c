@@ -347,7 +347,7 @@ int protocol(struct inverter_info_t *firstinverter, char *sendcommanddatetime)
 
 	sprintf(temp, "%d", ecu.count);
 	for(i=0; i<(3-strlen(temp)); i++)
-		strcat(buff, "A");
+		strcat(buff, "0");
 	strcat(buff, temp);
 
 	if(!ecu.zoneflag)
