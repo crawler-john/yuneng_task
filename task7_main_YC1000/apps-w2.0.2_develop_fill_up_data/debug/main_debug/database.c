@@ -42,26 +42,6 @@ sqlite3 *database_init()			//数据库初始化
 	strcpy(sql, "CREATE TABLE IF NOT EXISTS signal_strength(id VARCHAR(256), signal_strength INTEGER, set_flag INTEGER, primary key(id))");
 	sqlite3_exec_3times(db, sql);
 
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS restore_inverters(id VARCHAR(15) PRIMARY KEY, restore_result INTEGER, restore_time VARCHAR(256), restore_flag INTEGER)");	//create data table
-	sqlite3_exec_3times(db, sql);
-
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS inverter_version(id VARCHAR(15) PRIMARY KEY, model INTEGER, version INTEGER, read_time VARCHAR(256), get_flag INTEGER)");	//create data table
-	sqlite3_exec_3times(db, sql);
-
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS update_inverter(id VARCHAR(15) PRIMARY KEY, update_result INTEGER, update_time VARCHAR(256), update_flag INTEGER)");	//create data table
-	sqlite3_exec_3times(db, sql);
-
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS protection_parameters(id VARCHAR(15), type INTEGER, under_voltage_fast INTEGER, "
-			"over_voltage_fast INTEGER, under_voltage_slow INTEGER, over_voltage_slow INTEGER, under_frequency_fast REAL, "
-			"over_frequency_fast REAL, under_frequency_slow REAL, over_frequency_slow REAL, voltage_triptime_fast REAL, "
-			"voltage_triptime_slow REAL, frequency_triptime_fast REAL, frequency_triptime_slow REAL, grid_recovery_time INTEGER, "
-			"under_voltage_stage_2 INTEGER, voltage_3_clearance_time REAL, regulated_dc_working_point REAL, start_time INTEGER, "
-			"set_flag INTEGER, primary key(id));");	//create data table
-	sqlite3_exec_3times(db, sql);
-
-	strcpy(sql,"CREATE TABLE IF NOT EXISTS need_id(correct_id VARCHAR(256),wrongid VARCHAR(256),set_flag INTEGER, primary key(correct_id))");
-	sqlite3_exec_3times(db, sql);
-
 	//sql = "CREATE TABLE Data(item int, record VARCHAR(7440));";
 	/*strcpy(sql,"CREATE TABLE Data(item INTEGER, record VARCHAR(74400), resendflag VARCHAR(20));");
 	sqlite3_exec( db , sql , 0 , 0 , &zErrMsg );	//create data table
@@ -96,47 +76,6 @@ int record_db_init()			//数据库初始化
 	strcpy(sql, "CREATE TABLE IF NOT EXISTS inverter_status (item INTEGER PRIMARY KEY AUTOINCREMENT, result VARCHAR, date_time VARCHAR, flag INTEGER)");
 	sqlite3_exec_3times(db, sql);
 
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS inverter_status_single (item INTEGER PRIMARY KEY AUTOINCREMENT, id VARCHAR, result VARCHAR, date_time VARCHAR, flag INTEGER)");
-	sqlite3_exec_3times(db, sql);
-
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS Data(item INTEGER, record VARCHAR(74400), resendflag VARCHAR(20), date_time VARCHAR(16))");
-	sqlite3_exec_3times(db, sql);
-
-	sqlite3_close(db);
-
-	return 0;
-}
-
-int operation_db_init()
-{
-	char sql[1024]={'\0'};
-	sqlite3 *db;
-
-	sqlite3_open("/home/operation.db", &db);
-
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS turned_on_off_operation (id VARCHAR(256), turned_off_opreation INTEGER)");
-	sqlite3_exec_3times(db, sql);
-
-	sqlite3_close(db);
-
-	return 0;
-}
-
-int encrypition_init()
-{
-	char sql[1024]={'\0'};
-	sqlite3 *db;
-
-	sqlite3_open("/home/encryption.db", &db);
-
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS key (item INTEGER PRIMARY KEY, key VARCHAR(256), operator INTEGER, "
-			"set_flag INTEGER , cmd INTEGER, read_flag INTEGER)");
-	sqlite3_exec_3times(db, sql);
-
-	strcpy(sql, "CREATE TABLE IF NOT EXISTS info (id VARCHAR(256) PRIMARY KEY, key VARCHAR(256), operator INTEGER, "
-			"status INTEGER, result INTEGER)");
-	sqlite3_exec_3times(db, sql);
-
 	sqlite3_close(db);
 
 	return 0;
@@ -147,29 +86,12 @@ int sqlite3_exec_3times(sqlite3 *db, char *sql)
 	int i;
 	char *zErrMsg = 0;
 
-	for(i=0; i<100; i++){
+	for(i=0; i<3; i++){
 		if(SQLITE_OK == sqlite3_exec(db, sql , 0, 0, &zErrMsg))
 			return 0;
 		else{
 			printmsg(zErrMsg);
-			usleep(500000);
-		}
-	}
-
-	return -1;
-}
-
-int sqlite3_exec_100times(sqlite3 *db, char *sql)
-{
-	int i;
-	char *zErrMsg = 0;
-
-	for(i=0; i<100; i++){
-		if(SQLITE_OK == sqlite3_exec(db, sql , 0, 0, &zErrMsg))
-			return 0;
-		else{
-			printmsg(zErrMsg);
-			usleep(500000);
+			usleep(1000);
 		}
 	}
 
@@ -185,22 +107,6 @@ int save_inverter_parameters_result(struct inverter_info_t *inverter, int item, 
 		return -1;
 
 	sprintf(sql, "REPLACE INTO inverter_process_result(item, inverter, result, flag) VALUES(%d, '%s', '%s', 1)", item, inverter->inverterid, inverter_result);
-	sqlite3_exec_3times(db, sql);
-
-	sqlite3_close(db);
-
-	return 0;
-}
-
-int save_inverter_parameters_result_id(char *id, int item, char *inverter_result)
-{
-	sqlite3 *db=NULL;
-	char sql[65535];
-
-	if(SQLITE_OK != sqlite3_open("/home/database.db", &db))
-		return -1;
-
-	sprintf(sql, "REPLACE INTO inverter_process_result(item, inverter, result, flag) VALUES(%d, '%s', '%s', 1)", item, id, inverter_result);
 	sqlite3_exec_3times(db, sql);
 
 	sqlite3_close(db);
@@ -433,20 +339,83 @@ void save_record(char sendbuff[], char *date_time)			//ECU发送记录给EMA的�
 {
     char sql[1024]={'\0'};
     char db_buff[MAXINVERTERCOUNT*74+100]={'\0'};
-	sqlite3 *db;
+    char *zErrMsg=0;
+    int nrow=0,ncolumn=0,res;
+    char **azResult;
+    int i=0;
+    sqlite3 *db;
 
     sqlite3_open("/home/record.db", &db);
+    strcpy(sql, "create table if not exists Data(item int, record VARCHAR(74400), resendflag VARCHAR(20), date_time VARCHAR(16))");
+    for(i=0; i<3; i++)
+    {
+    	if(SQLITE_OK == sqlite3_exec( db , sql , 0 , 0 , &zErrMsg ))
+    	{
+    		print2msg("Create table Data", zErrMsg);
+    		break;
+    	}
+    	else
+    		print2msg("Create table Data", zErrMsg);
+    	sleep(1);
+    }
+
 	if(strlen(sendbuff)>0) {
 		if(1 == getdbsize()) {
 			memset(sql, '\0', sizeof(sql));
-			strcpy(sql, "DELETE FROM Data WHERE rowid=(SELECT MIN(rowid) FROM Data)");
-			sqlite3_exec_100times(db , sql);
-		}
+			strcpy(sql, "SELECT item FROM Data");
+			for(i=0;i<3;i++)
+			{
+				if(SQLITE_OK == sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg ))
+					break;
+				sleep(1);
+			}
+			if(nrow > 0)
+			{
+				memset(sql, '\0', sizeof(sql));
+				sprintf(sql, "DELETE FROM Data WHERE item = %d", atoi(azResult[1]));
+				sqlite3_exec( db , sql , 0 , 0 , &zErrMsg );
+			}
 
-		memset(db_buff, '\0', sizeof(db_buff));
-		sprintf(db_buff, "INSERT INTO Data (item, record, resendflag, date_time) "
-				"VALUES(%d , '%s', '1', '%s');", 1, sendbuff, date_time);
-		sqlite3_exec_100times(db, db_buff);
+			memset(db_buff,'\0',sizeof(db_buff));
+   		 	if(nrow==0)
+				sprintf(db_buff,"INSERT INTO Data (item, record, resendflag, date_time) VALUES( %d , '%s', '1', '%s');", 1, sendbuff, date_time);
+			else
+				sprintf(db_buff,"INSERT INTO Data (item, record, resendflag, date_time) VALUES( %d , '%s', '1', '%s');", atoi(azResult[nrow])+1, sendbuff, date_time);
+
+			res=sqlite3_exec( db , db_buff , 0 , 0 , &zErrMsg );
+			print2msg("Insert record into database", zErrMsg);
+			if(SQLITE_OK != res){
+				sleep(2);
+				sqlite3_exec( db , db_buff , 0 , 0 , &zErrMsg );
+				print2msg("Insert record into database again", zErrMsg);
+			}
+			sqlite3_free_table( azResult );
+		}
+		else{
+			memset(sql, '\0', sizeof(sql));
+			strcpy(sql, "SELECT item FROM Data");
+			for(i=0;i<3;i++)
+			{
+				if(SQLITE_OK == sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg ))
+					break;
+				sleep(1);
+			}
+			memset(db_buff,'\0',sizeof(db_buff));
+	   	 	if(nrow==0)
+				sprintf(db_buff,"INSERT INTO Data (item, record, resendflag, date_time) VALUES( %d , '%s', '1', '%s');", 1, sendbuff, date_time);
+	    	else
+				sprintf(db_buff,"INSERT INTO Data (item, record, resendflag, date_time) VALUES( %d , '%s', '1', '%s');", atoi(azResult[nrow])+1, sendbuff, date_time);
+
+			res=sqlite3_exec( db , db_buff , 0 , 0 , &zErrMsg );
+			print2msg("Insert record into database", zErrMsg);
+			if(SQLITE_OK != res){
+				sleep(2);
+				sqlite3_exec( db , db_buff , 0 , 0 , &zErrMsg );
+				print2msg("Insert record into database again", zErrMsg);
+			}
+
+	      	sqlite3_free_table( azResult );
+		}
 	}
 	sqlite3_close(db);
 }
@@ -911,25 +880,6 @@ int save_status(char *result, char *date_time)	//设置保护参数，功率等�
 
 	memset(sql ,'\0', sizeof(sql));
 	sprintf(sql, "INSERT INTO inverter_status (result, date_time, flag) VALUES('%s', '%s', 1)", result, date_time);
-	sqlite3_exec_3times(db, sql);
-
-	sqlite3_close(db);
-}
-
-int save_status_single(char *id, char *result, char *date_time)	//单台逆变器的补发事件后，把结果保存到数据库中，control_client把结果发送到EMA
-{
-	sqlite3 *db;
-	char *zErrMsg=0;
-	char sql[65535]={'\0'};
-	int i;
-
-	sqlite3_open("/home/record.db", &db);
-
-	strcpy(sql, "DELETE FROM inverter_status_single WHERE item<(SELECT MAX(item)-10000 FROM inverter_status_single)");
-	sqlite3_exec_3times(db, sql);
-
-	memset(sql ,'\0', sizeof(sql));
-	sprintf(sql, "INSERT INTO inverter_status_single (id, result, date_time, flag) VALUES('%s', '%s', '%s', 1)", id, result, date_time);
 	sqlite3_exec_3times(db, sql);
 
 	sqlite3_close(db);
