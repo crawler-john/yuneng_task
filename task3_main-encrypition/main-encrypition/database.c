@@ -130,11 +130,11 @@ int encrypition_init()
 	sqlite3_open("/home/encryption.db", &db);
 
 	strcpy(sql, "CREATE TABLE IF NOT EXISTS key (item INTEGER PRIMARY KEY, key VARCHAR(256), operator INTEGER, "
-			"set_flag INTEGER , cmd INTEGER, read_flag INTEGER)");
+			"set_flag INTEGER , cmd INTEGER, read_flag INTEGER,set_time_flag INTEGER,timeout INTEGER)");
 	sqlite3_exec_3times(db, sql);
 
 	strcpy(sql, "CREATE TABLE IF NOT EXISTS info (id VARCHAR(256) PRIMARY KEY, key VARCHAR(256), operator INTEGER, "
-			"status INTEGER, result INTEGER)");
+			"status INTEGER, result INTEGER,timeout INTEGER)");
 	sqlite3_exec_3times(db, sql);
 
 	sqlite3_close(db);
