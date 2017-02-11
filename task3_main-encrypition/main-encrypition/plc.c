@@ -26,6 +26,8 @@ extern unsigned char ccuid[7];		//ECU3501的ID
 extern sqlite3 *db;			//数据库
 extern sqlite3 *tmpdb;
 extern int afdflag;	//逆变器AFD对齐
+extern int LastHeartTime;
+int HeartIntervalTime = 300;
 
 extern int processpower(struct inverter_info_t *firstinverter);
 
@@ -307,6 +309,14 @@ int process_all(struct inverter_info_t *firstinverter)
 	//process_afd();
 }
 
+void checkHeartBeat()
+{
+	if((time(NULL) - LastHeartTime) >=HeartIntervalTime)
+	{
+		encrypition_heartbeat();
+	}
+}
+
 int getalldata(struct inverter_info_t *firstinverter, char *time, int time_linux)		//获取每个逆变器的数据
 {
 	int i, j, currentcount = 0;
@@ -319,6 +329,7 @@ int getalldata(struct inverter_info_t *firstinverter, char *time, int time_linux
 	encrypition_heartbeat();
 
 	for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->inverterid)); i++){		//每个逆变器要一次数据
+		checkHeartBeat();
 		process_all(firstinverter);
 		curinverter->curflag = '0';
 		if(0 == curinverter->configflag){
@@ -334,6 +345,7 @@ int getalldata(struct inverter_info_t *firstinverter, char *time, int time_linux
 	for(j=0; j<7; j++){
 		curinverter = firstinverter;
 		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(curinverter->inverterid)); i++){		//每个逆变器最多要5次数据
+			checkHeartBeat();
 			process_all(firstinverter);
 			if('0' == curinverter->curflag)
 				sendaskcmd(curinverter, time);

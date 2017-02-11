@@ -9,6 +9,7 @@
 extern int plcmodem;		//PLC的文件描述符
 extern unsigned char ccuid[7];		//ECU3501的ID
 extern char ecuid[13];			//ECU的ID
+int LastHeartTime = 0;
 
 char key_global[16]={'\0'};
 
@@ -381,8 +382,8 @@ int read_encrypition_key(char *id, char *key_ecu, char *buff_inv,char *buff_inv2
 				(readbuff[19] == 0x00) &&
 				(readbuff[20] == 0xD0) &&
 				(readbuff[21] == 0xA4) &&
-				(readbuff[34] == 0xFE) &&
-				(readbuff[35] == 0xFE)
+				(readbuff[44] == 0xFE) &&
+				(readbuff[45] == 0xFE)
 			){
 			print2msg(id, "Read Encrypition Key successfully");
 			for(i=0; i<8; i++)
@@ -661,7 +662,7 @@ int encrypition_heartbeat()		//防盗系统的心跳包，在每次大轮询前�
 
 	write(plcmodem, sendbuff, 36);
 	sleep(10);
-
+	LastHeartTime = time(NULL);
 	return 0;
 }
 
@@ -675,7 +676,7 @@ int set_encrypition_timeout(char *id, char *key, int timeout ,char *buff_inv)	//
 
 	sendbuff[0] = 0xFB;			//HEAD
 	sendbuff[1] = 0xFB;			//HEAD
-	sendbuff[2] = 0x03;			//CMD
+	sendbuff[2] = 0x01	;			//CMD
 	sendbuff[3] = 0x00;			//LENGTH
 	sendbuff[4] = 0x1B;			//LENGTH
 	sendbuff[5] = ccuid[0];		//ccuid
@@ -695,32 +696,30 @@ int set_encrypition_timeout(char *id, char *key, int timeout ,char *buff_inv)	//
 	sendbuff[19] = 0x00;
 	sendbuff[20] = 0xD0;
 	sendbuff[21] = 0xA5;
-	sendbuff[22] = 0x00;
-	sendbuff[23] = 0x00;
-	sendbuff[24] = timeout/256;
-	sendbuff[25] = timeout%256;
-	sendbuff[26] = key[0];
-	sendbuff[27] = key[1];
-	sendbuff[28] = key[2];
-	sendbuff[29] = key[3];
-	sendbuff[30] = key[4];
-	sendbuff[31] = key[5];
-	sendbuff[32] = key[6];
-	sendbuff[33] = key[7];
+	sendbuff[22] = timeout/256;
+	sendbuff[23] = timeout%256;
+	sendbuff[24] = key[0];
+	sendbuff[25] = key[1];
+	sendbuff[26] = key[2];
+	sendbuff[27] = key[3];
+	sendbuff[28] = key[4];
+	sendbuff[29] = key[5];
+	sendbuff[30] = key[6];
+	sendbuff[31] = key[7];
 
-	for(i=2; i<34; i++){
+	for(i=2; i<32; i++){
 		check = check + sendbuff[i];
 	}
 
-	sendbuff[34] = check >> 8;		//CHK
-	sendbuff[35] = check;		//CHK
-	sendbuff[36] = 0xFE;		//TAIL
-	sendbuff[37] = 0xFE;		//TAIL
+	sendbuff[32] = check >> 8;		//CHK
+	sendbuff[33] = check;		//CHK
+	sendbuff[34] = 0xFE;		//TAIL
+	sendbuff[35] = 0xFE;		//TAIL
 
 	printhexmsg("Set Encrypition timeout", sendbuff, 36);
 
 	for(i=0; i<3; i++){
-		write(plcmodem, sendbuff, 38);
+		write(plcmodem, sendbuff, 36);
 		usleep(500000);
 
 		ret = get_reply_from_serial(plcmodem, 5, 0, readbuff);
@@ -778,6 +777,7 @@ int set_encrypition_timeout(char *id, char *key, int timeout ,char *buff_inv)	//
 
 	return 0;
 }
+
 int set_encrypition_timeout_all(struct inverter_info_t *firstinverter, char *key,int timeout, int operator)		//设置所有逆变器的加密信息
 {
 	struct inverter_info_t *inverter = firstinverter;
@@ -822,7 +822,7 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 	char key[16]={'\0'};
 	int operator, cmd=0;
 	struct inverter_info_t *inverter = firstinverter;
-	int i, j, exist, set_flag=0, read_flag=0,set_time_flag=0,timeout;
+	int i, j, exist, set_flag=0, read_flag=0,set_time_flag=0,timeout =0;
 	FILE *fp;
 	char flag[2]={'\0'};
 
@@ -865,6 +865,8 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 				timeout = atoi(azResult[13]);
 
 		}
+		else
+			return 0;
 	}
 	sqlite3_free_table( azResult );
 
@@ -910,11 +912,11 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 			}
 		}
 	}
-
+	inverter = firstinverter;
 	strcpy(sql, "SELECT id,timeout FROM info");
 	if(SQLITE_OK == sqlite3_get_table( db , sql , &azResult , &nrow , &ncolumn , &zErrMsg ))
 	{
-		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->inverterid))&&('1' == inverter->flag); i++, inverter++)
+		for(i=0; (i<MAXINVERTERCOUNT)&&(12==strlen(inverter->inverterid)); i++, inverter++)
 		{
 			exist = 0;
 			for(j=1; j<=nrow; j++)
@@ -922,7 +924,7 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 				if(!strcmp(inverter->inverterid, azResult[j*ncolumn]))
 				{
 					exist = 1;
-					if((!azResult[j*ncolumn+1]) || (timeout != atoi(azResult[j*ncolumn+1])))		//逆变器的信息已存在，如果逆变器的加密信息和最后一次操作不一致，需要重新操作。
+					if((cmd == 1)&&timeout&&((!azResult[j*ncolumn+1]) || (timeout != atoi(azResult[j*ncolumn+1]))))		//逆变器的信息已存在，如果逆变器的加密信息和最后一次操作不一致，需要重新操作。
 					{
 						set_encrypition_timeout(inverter->inverterid, key,timeout, buff_inv);
 					}

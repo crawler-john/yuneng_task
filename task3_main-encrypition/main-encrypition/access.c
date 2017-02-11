@@ -6,12 +6,30 @@
 #include "datetime.h"
 
 extern int caltype;		//计算方式，NA版和非NA版的区别
+extern int HeartIntervalTime;
 
 void write_control_file(void)
 {
 	FILE *fp;
 	fp=fopen("/tmp/webcommand.conf","w"); //Necessary,else read_control will be error!
 	fclose(fp);
+}
+void get_heart_interval_time()
+{
+	char interval_time[50];
+	FILE *fp = fopen("/etc/yuneng/heart_interval_time.txt", "r");
+	if(fp){
+		fgets(interval_time, 50, fp);
+		HeartIntervalTime = atoi(interval_time);
+		fclose(fp);
+	}else
+	{
+		fp = fopen("/etc/yuneng/heart_interval_time.txt", "w");
+		fprintf(fp, "%d\n", 300);
+		HeartIntervalTime = 300;
+		fclose(fp);
+	}
+	printf("HeartIntervalTime:%d\n",HeartIntervalTime);
 }
 
 void write_parafile(void)		//写两个空白文件，否则刚启动时，无法打开实时数据页面
@@ -62,6 +80,7 @@ int initialize(void)				//初始设置函数，调用了上述的函数
 	writecurrentnumber(0);
 	writesystempower(0);
 	writelastreporttime();
+	get_heart_interval_time();
 	//writepresetdata();
 }
 
@@ -578,3 +597,5 @@ int show_data_on_lcd(int power, float energy, int count, int maxcount)
 		fclose(fp);
 	}
 }
+
+

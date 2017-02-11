@@ -1076,10 +1076,10 @@ int main(int argc, char *argv[])
 	durabletime = thistime+65535;		//确保第一次可以轮询；
 
 
-
+	process_encrypition(inverter);
 
 	while(1){
-		if((durabletime-thistime)>=reportinterval){
+		if((durabletime-thistime)>=60){
 			thistime = time(NULL);
 		printmsg("------------------------------------------------------------------->");
 
@@ -1211,7 +1211,7 @@ int main(int argc, char *argv[])
 		else
 			reportinterval = durabletime-thistime;
 
-		durabletime = fill_up_data(inverter,(reportinterval+300+thistime),thistime);
+		//durabletime = fill_up_data(inverter,(reportinterval+300+thistime),thistime);
 
 	}
 
