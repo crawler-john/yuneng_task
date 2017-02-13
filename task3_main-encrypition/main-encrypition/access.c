@@ -14,7 +14,7 @@ void write_control_file(void)
 	fp=fopen("/tmp/webcommand.conf","w"); //Necessary,else read_control will be error!
 	fclose(fp);
 }
-void get_heart_interval_time()
+void get_heart_interval_time()		//读取心跳时间，如果没有心跳时间文件则创建心跳文件（时间为300S）
 {
 	char interval_time[50];
 	FILE *fp = fopen("/etc/yuneng/heart_interval_time.txt", "r");

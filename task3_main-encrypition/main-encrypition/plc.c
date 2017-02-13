@@ -309,7 +309,7 @@ int process_all(struct inverter_info_t *firstinverter)
 	//process_afd();
 }
 
-void checkHeartBeat()
+void checkHeartBeat()				//心跳检测，与上次心跳对比，检测是否超过心跳时间，如果超过心跳时间则重新发送一次心跳。
 {
 	if((time(NULL) - LastHeartTime) >=HeartIntervalTime)
 	{

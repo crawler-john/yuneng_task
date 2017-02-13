@@ -661,8 +661,8 @@ int encrypition_heartbeat()		//防盗系统的心跳包，在每次大轮询前�
 	printhexmsg("Encrypition Heartbeat", sendbuff, 36);
 
 	write(plcmodem, sendbuff, 36);
-	sleep(10);
 	LastHeartTime = time(NULL);
+	sleep(10);
 	return 0;
 }
 
