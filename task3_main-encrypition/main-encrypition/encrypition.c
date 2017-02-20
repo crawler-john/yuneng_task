@@ -87,14 +87,14 @@ int get_encryption_timeout(char *id)
 		{
 			if(azResult[1])
 			{
-				timeout = atoi(azResult[13]);
+				timeout = atoi(azResult[1]);
 			}
 		}
 	}
 
 	sqlite3_close( db );
 
-	return timeout = atoi(azResult[13]);
+	return timeout;
 }
 
 
@@ -663,13 +663,13 @@ int encrypition_heartbeat()		//防盗系统的心跳包，在每次大轮询前�
 	write(plcmodem, sendbuff, 36);
 	LastHeartTime = time(NULL);
 	sleep(10);
+
 	return 0;
 }
 
 int set_encrypition_timeout(char *id, char *key, int timeout ,char *buff_inv)	//给逆变器加密设置超时时间
 {
 	unsigned char sendbuff[512]={'\0'};
-	char inverter_result[256]={'\0'};
 	char readbuff[256];
 	unsigned short check=0x00;
 	int i, ret=0;
@@ -756,15 +756,14 @@ int set_encrypition_timeout(char *id, char *key, int timeout ,char *buff_inv)	//
 			{
 				save_encrypition_timeout_result(id,timeout);
 				sprintf(buff_inv, "%012s1%04dEND", id,timeout);
+				return 1;
 			}
 			else
 			{
 				sprintf(buff_inv, "%012s2%04dEND", id,get_encryption_timeout(id));
-				sprintf(inverter_result, "%012s0END", id);
-				save_inverter_parameters_result_id(id, 143, inverter_result);
+				return 0;
 			}
 
-			return 1;
 		}
 		else
 		{
@@ -772,8 +771,6 @@ int set_encrypition_timeout(char *id, char *key, int timeout ,char *buff_inv)	//
 		}
 	}
 	sprintf(buff_inv, "%012s3%04dEND", id,get_encryption_timeout(id));
-	sprintf(inverter_result, "%012s0END", id);
-	save_inverter_parameters_result_id(id, 143, inverter_result);
 
 	return 0;
 }
@@ -798,9 +795,8 @@ int set_encrypition_timeout_all(struct inverter_info_t *firstinverter, char *key
 	{
 		get_date_time(date_time);
 
-		sprintf(buff_ema, "%s%05d%s%s%012s%01d%04d%s%sEND%s", "APS13",(66+20*count),"A144","AAA0",ecuid, operator, count, "00000000000000",date_time, buff_all);
-
-		save_process_result(144, buff_ema);
+		sprintf(buff_ema, "%s%05d%s%s%012s%01d%04d%s%sEND%s", "APS13",(66+20*count),"A143","AAA0",ecuid, operator, count, "00000000000000",date_time, buff_all);
+		save_process_result(143, buff_ema);
 	}
 
 	clear_set_time_flag();
@@ -926,7 +922,14 @@ int process_encrypition(struct inverter_info_t *firstinverter)
 					exist = 1;
 					if((cmd == 1)&&timeout&&((!azResult[j*ncolumn+1]) || (timeout != atoi(azResult[j*ncolumn+1]))))		//逆变器的信息已存在，如果逆变器的加密信息和最后一次操作不一致，需要重新操作。
 					{
-						set_encrypition_timeout(inverter->inverterid, key,timeout, buff_inv);
+						int ret = 0;
+						ret = set_encrypition_timeout(inverter->inverterid, key,timeout, buff_inv);
+						if(1 == ret)
+						{
+							char inverter_result[256]={'\0'};
+							sprintf(inverter_result, "%012s1%04dEND", inverter->inverterid,timeout);
+							save_inverter_parameters_result_id(inverter->inverterid, 143, inverter_result);
+						}
 					}
 					break;
 				}
