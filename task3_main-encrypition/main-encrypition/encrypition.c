@@ -358,13 +358,14 @@ int read_encrypition_key(char *id, char *key_ecu, char *buff_inv,char *buff_inv2
 		usleep(500000);
 
 		ret = get_reply_from_serial(plcmodem, 5, 0, readbuff);
-
-		if((46 == ret) &&
+		if((36 == ret) &&
+		//if((46 == ret) &&
 				(readbuff[0] == 0xFB) &&
 				(readbuff[1] == 0xFB) &&
 				(readbuff[2] == 0x01) &&
 				(readbuff[3] == 0x00) &&
-				(readbuff[4] == 0x25) &&
+				(readbuff[4] == 0x1B) &&
+				//(readbuff[4] == 0x25) &&
 				(readbuff[5] == ccuid[0]) &&
 				(readbuff[6] == ccuid[1]) &&
 				(readbuff[7] == ccuid[2]) &&

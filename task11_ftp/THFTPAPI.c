@@ -71,7 +71,9 @@ int connect_server( char *host, int port )
     
     len = recv( ctrl_sock, buf, 512, 0 );
     buf[len] = 0;
+    printf("buf:%s\n",buf);
     sscanf( buf, "%d", &result );
+    printf("result:%d\n",result);
     if ( result != 220 ) {
         close( ctrl_sock );
         return -1;
@@ -314,6 +316,7 @@ int ftp_list( int c_sock, char *path, void **data, unsigned long long *data_len)
     return 0;
 }
 
+
 /*
 //获得文件
 int ftp_retrfile( int c_sock, char *s, char *d )
@@ -342,7 +345,7 @@ int ftp_retrfile( int c_sock, char *s, char *d )
     close( handle );
     return 0;
 }
- */
+*/
 
 int ftp_retrfile( int c_sock, char *s, char *d ,unsigned long long *stor_size, int *stop)
 {
@@ -533,4 +536,15 @@ int ftp_quit( int c_sock)
     re = ftp_sendcmd( c_sock, "QUIT\r\n" );
     close( c_sock );
     return re;
+}
+
+
+int main(void)
+{
+    unsigned long long stor_size = 0;
+    int stop = 0;
+    int sockfd = ftp_connect("ecu.apsema.com",9219,"zhyf","yuneng");
+    printf("ftp %d\n",sockfd);
+    ftp_retrfile(sockfd,"/Result/123455.log","./test",&stor_size,&stop);
+    ftp_quit(sockfd);
 }
