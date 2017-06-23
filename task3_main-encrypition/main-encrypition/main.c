@@ -1079,7 +1079,8 @@ int main(int argc, char *argv[])
 
 
 	while(1){
-		if((durabletime-thistime)>=reportinterval){
+		//if((durabletime-thistime)>=reportinterval){
+		if((durabletime-thistime)>60){
 			thistime = time(NULL);
 		printmsg("------------------------------------------------------------------->");
 
@@ -1211,7 +1212,7 @@ int main(int argc, char *argv[])
 		else
 			reportinterval = durabletime-thistime;
 
-		durabletime = fill_up_data(inverter,(reportinterval+300+thistime),thistime);
+	//	durabletime = fill_up_data(inverter,(reportinterval+300+thistime),thistime);
 
 	}
 
